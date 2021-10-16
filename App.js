@@ -1,5 +1,6 @@
 import * as Location from "expo-location";
 import { StatusBar } from "expo-status-bar";
+import { Fontisto } from "@expo/vector-icons";
 import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
@@ -13,11 +14,23 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const API_KEY = "8ab63e31b6ca6a84e4f0a055bdffc9a4";
 
+// Icons
+const icons = {
+  Clouds: "cloudy",
+  Clear: "day-sunny",
+  Atmosphere: "cloudy-gusts",
+  Snow: "snow",
+  Rain: "rains",
+  Drizzle: "rain",
+  Thunderstorm: "lightning",
+};
+
 export default function App() {
   const [city, setCity] = useState("Loading...");
   const [days, setDays] = useState([]);
+  const [currentTemp, setCurrentTemp] = useState(null);
   const [ok, setOk] = useState(true);
-  const ask = async () => {
+  const getWeather = async () => {
     const { granted } = await Location.requestForegroundPermissionsAsync();
     if (!granted) {
       setOk(false);
@@ -35,15 +48,28 @@ export default function App() {
     );
     const json = await response.json();
     setDays(json.daily);
+    setCurrentTemp(json.current.temp);
   };
   useEffect(() => {
-    ask();
+    getWeather();
   }, []);
   return (
     <View style={styles.container}>
+      {/* City */}
       <View style={styles.city}>
         <Text style={styles.cityName}>{city}</Text>
       </View>
+      {/* Current Temp */}
+      <View style={styles.current}>
+        {currentTemp !== null ? (
+          <Text style={styles.currentTemp}>
+            {parseFloat(currentTemp)?.toFixed(1)} ºC
+          </Text>
+        ) : (
+          <Text></Text>
+        )}
+      </View>
+      {/* 8 Days */}
       <ScrollView
         pagingEnabled
         horizontal
@@ -51,20 +77,38 @@ export default function App() {
         contentContainerStyle={styles.weather}
       >
         {days.length === 0 ? (
-          <View style={styles.day}>
-            <ActivityIndicator
-              style={{ marginTop: 10 }}
-              color="white"
-              size="large"
-            />
+          <View
+            style={{
+              ...styles.day,
+              flex: 5,
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            <ActivityIndicator color="#dff9fb" size="large" />
           </View>
         ) : (
           days.map((day, index) => (
             <View key={index} style={styles.day}>
-              <Text style={styles.temp}>
-                {parseFloat(day.temp.day).toFixed(1)}
+              <Text style={styles.date}>
+                {new Date(day.dt * 1000).toString().substring(0, 10)}
               </Text>
-              <Text style={styles.description}>{day.weather[0].main}</Text>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={styles.temp}>
+                  {parseFloat(day.temp.min).toFixed(1)} ~ {""}
+                </Text>
+                <Text style={styles.temp}>
+                  {parseFloat(day.temp.max).toFixed(1)}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={styles.description}>{day.weather[0].main}</Text>
+                <Fontisto
+                  name={icons[day.weather[0].main]}
+                  size={68}
+                  color="#dff9fb"
+                />
+              </View>
               <Text style={styles.tinyText}>{day.weather[0].description}</Text>
             </View>
           ))
@@ -78,34 +122,54 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "tomato",
+    backgroundColor: "#a29bfe",
   },
+  // City
   city: {
-    flex: 1.2,
+    flex: 1.5,
     justifyContent: "center",
     alignItems: "center",
   },
   cityName: {
-    color: "white",
+    color: "#dff9fb",
     fontSize: 50,
     fontWeight: "500",
   },
-  weather: {},
-  day: {
-    marginTop: 10,
-    width: SCREEN_WIDTH,
+  // Current Temp
+  current: {
+    flex: 1,
     alignItems: "center",
   },
-  temp: {
-    marginTop: 50,
+  currentTemp: {
+    color: "#dff9fb",
+    fontSize: 110,
     fontWeight: "600",
-    fontSize: 130,
+  },
+  weather: {},
+  // 8 days
+  day: {
+    width: SCREEN_WIDTH,
+    alignItems: "flex-start",
+    paddingHorizontal: 20,
+  },
+  date: {
+    color: "#dff9fb",
+    fontSize: 20,
+    marginBottom: 10,
+  },
+  temp: {
+    color: "#dff9fb",
+    fontWeight: "600",
+    fontSize: 70,
   },
   description: {
-    marginTop: -30,
+    color: "#dff9fb",
     fontSize: 60,
+    marginBottom: 10,
+    marginRight: 20,
   },
   tinyText: {
+    color: "#dff9fb",
     fontSize: 20,
   },
 });

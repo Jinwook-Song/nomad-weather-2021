@@ -122,7 +122,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#a29bfe",
+    backgroundColor: "#fd79a8",
   },
   // City
   city: {
